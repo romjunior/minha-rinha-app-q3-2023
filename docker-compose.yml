@@ -1,5 +1,23 @@
 version: "3.7"
 services:
+  lb:
+    image: nginx:latest
+    depends_on:
+      minharinha1:
+        condition: service_healthy
+      minharinha2:
+        condition: service_healthy
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "9999:9999"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: '300MB'
+    networks:
+      - rinha-network
   minharinha1:
     image: minha-rinha-app
     hostname: minharinha1
@@ -7,24 +25,49 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl 127.0.0.1:9999"]
+      test: ["CMD-SHELL", "curl 127.0.0.1:8080"]
       interval: 3s
       timeout: 5s
-      retries: 5
+      retries: 20
+      start_period: 60s
     deploy:
       resources:
         limits:
-          cpus: '0.7'
-          memory: '2GB'
+          cpus: '0.55'
+          memory: '900MB'
     environment:
       RINHA_DB_ADDRESS: postgres
       RINHA_DB: rinhadb
       RINHA_DB_USER: rinha
       RINHA_DB_PASSWORD: rinha123
-      SPRING_PORT: 9999
-      RINHA_DB_MAX_POOL: 20
-    ports:
-      - 9999:9999
+      SPRING_PORT: 8080
+      RINHA_DB_MAX_POOL: 25
+    networks:
+      - rinha-network
+  minharinha2:
+    image: minha-rinha-app
+    hostname: minharinha2
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl 127.0.0.1:8081" ]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.55'
+          memory: '900MB'
+    environment:
+      RINHA_DB_ADDRESS: postgres
+      RINHA_DB: rinhadb
+      RINHA_DB_USER: rinha
+      RINHA_DB_PASSWORD: rinha123
+      SPRING_PORT: 8081
+      RINHA_DB_MAX_POOL: 25
     networks:
       - rinha-network
   postgres:
@@ -34,14 +77,14 @@ services:
       POSTGRES_PASSWORD: rinha123
       POSTGRES_DB: rinhadb
     ports:
-      - 5432:5432
+      - "5432:5432"
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     deploy:
       resources:
         limits:
-          cpus: '0.65'
-          memory: '1GB'
+          cpus: '0.3'
+          memory: '900MB'
     networks:
       - rinha-network
     healthcheck:
