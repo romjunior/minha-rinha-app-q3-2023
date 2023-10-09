@@ -15,11 +15,11 @@ spring:
       testOnBorrow: true
       testOnReturn: true
       connectionTestQuery: SELECT 1
-      connectionTimeout: 3000
+      connectionTimeout: 25000
       maxLifetime: 1800000
       leakDetectionThreshold: 300000
 #      minimumIdle: 10
-      validationTimeout: 2500
+      validationTimeout: 24500
 #      idleTimeout: 600000
       autoCommit: true
       maximumPoolSize: ${RINHA_DB_MAX_POOL:16}
