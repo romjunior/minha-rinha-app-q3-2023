@@ -3,12 +3,15 @@ FROM public."PESSOAS";
 
 select count(*) from public."PESSOAS";
 
-select * from "PESSOAS" p where p."APELIDO" = 'teste' or p."NOME" = 'teste' or p."STACK" && array ['Node'] limit  10;
+select * from "PESSOAS" p where p."APELIDO" = 'teste' or p."NOME" = 'teste' or p."STACK" && array ['Java'] limit  10;
 
-select * from "PESSOAS" p where 'Node'=any(p."STACK");
+select * from "PESSOAS" p where 'Java'=any(p."STACK");
 
 select count(*) from PUBLIC."PESSOAS";
 
 select * from PUBLIC."PESSOAS" LIMIT 10;
 
-select * from PUBLIC."PESSOAS" p WHERE p."SEARCHTEXT" ILIKE '%javascript%';
+select * from PUBLIC."PESSOAS" p WHERE p."SEARCHTEXT" ILIKE '%java%';
+
+---analyse query
+explain analyze select * from PUBLIC."PESSOAS" p WHERE p."SEARCHTEXT" ILIKE '%java%';
