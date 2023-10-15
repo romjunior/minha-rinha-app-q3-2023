@@ -4,9 +4,9 @@
 
 ## Objetivo
 
-Fiquei sabendo da rinha de backend logo após ter acontecido e dos vídeos do [Fabio Akita](https://www.youtube.com/watch?v=EifK2a_5K_U) e do [MrPowerGameBR](https://www.youtube.com/watch?v=XqYdhlkRlus) publicados. Eu achei bem interessante e legal a dinâmica do desafio e assim como muitos outros não sou de competir, mas é interessante você se desafiar em contruir uma aplicação que chegue até os 46k de inserções.
+Fiquei sabendo da rinha de backend logo após ter acontecido e dos vídeos do [Fabio Akita](https://www.youtube.com/watch?v=EifK2a_5K_U) e do [MrPowerGameBR](https://www.youtube.com/watch?v=XqYdhlkRlus) serem publicados. Eu achei bem interessante e legal a dinâmica do desafio e assim como muitos outros não sou de competir, mas é interessante você se desafiar em construir uma aplicação que chegue até os 46k de inserções.
 
-Eu quis fazer algo para me divertir e também para sair da rotina, obviamente essa aplicação passa longe dos melhor 'design' por que o objetivo é fazer a aplicação aguentar a carga máxima.
+Eu quis fazer algo para me divertir e também para sair da rotina, obviamente essa aplicação passa longe do melhor *design* por que o objetivo é fazer a aplicação aguentar a carga máxima.
 
 ## Regras
 
@@ -15,7 +15,7 @@ Como explicado no repo da rinha, as regras são:
 * Construir uma aplicação backend que suporte os endpoints:
   * inserção de registros 
   * consulta por id
-  * consulta por termo(onde ele pode ser o apelido, nome ou stack de programação)
+  * consulta por termo(onde pode ser o apelido, nome ou stack de programação)
   * contador de registros inseridos no banco(para fins de classificar o backend)
 * Arquitetura
   * Um load balancer, o Nginx
@@ -37,13 +37,19 @@ Como explicado no repo da rinha, as regras são:
 * Postgres 16
 * Nginx para Load Balancer
 
-Acho que nessa descrição não há nada de novo, é uma stack padrão de quem utilizar Spring Boot, a única diferença é que optei por utilizar Spring Data JDBC diferente do Data JPA(Hibernate), isso por que nessa situação o Data JDBC gera SQL e executa via JDBC diferente do Spring Data que possui mais recursos como cache L1, Batch Operations, JPQL e etc. Que são recursos que eu não vou utilizar dado a natureza simples e direta da tabela no banco.
+Acho que nessa descrição não há nada de novo, é uma stack padrão de quem utiliza Spring Boot
+
+### JDBC e JPA
+
+A única diferença é que optei por utilizar Spring Data JDBC diferente do Data JPA, isso por que nessa situação o Data JDBC gera SQL e executa via JDBC diferente do Spring Data que possui mais recursos como cache L1, Batch Operations, JPQL e etc. Que são recursos que eu não vou utilizar dado a natureza simples e direta da tabela no banco.
 
 ![JDBC-vs-JPA](imgs/jdbc-jpa.jpg "JDBC vs JPA")
 
 Links:
 * [JDBC-VS-JPA Baeldung](https://www.baeldung.com/jpa-vs-jdbc)
 * [Spring Data JPA para o Data JDBC](https://jpa-buddy.com/blog/spring-data-jpa-to-spring-data-jdbc-a-smooth-ride/)
+
+### Cache vs Pesquisa no Banco
 
 Como mencionado nos vídeos toda galera trabalhou um cache, seja redis, nats ou em memória por que achavam que o banco não suportaria a carga, para o postgres mesmo com recursos limitados se sai extremamente bem com a carga de pesquisas e inserções no banco. O segredo maior é como indexamos uma busca por stack, apelido e nome no postgres, porque um dos critérios é que eu tenha uma busca dessa forma. 
 
@@ -62,18 +68,18 @@ OBS: é bom usar um explain analyse para ver se o seu indice é utilizado na bus
 
 ## Aprendizados
 
-No fim das contas eu consegui chegar nos 46k de inserções com mais de 100k requests na aplicação pelo intervalo de 3min com 3GB de RAM e 1.5CPU para o Nginx, 2 instâncias do backend e Postgres.
+No fim das contas eu consegui chegar nos 46k de inserções com mais de 100k requests na aplicação no intervalo de quase 4min.
 
 Algumas coisas importantes que aprendi com essa rinha:
 
 1. Nada que um bom teste de ‘stress’ ou carga para você avaliar se as configurações estão realmente otimizadas para o que você precisa.
 2. Controlar o fluxo é extremamente importante, então o controle de números de workers do nginx e o número de conexões no banco ajudaram nisso.
-3. Uma coisa que alguns devs não fazem, configurar o pool de conexões com teste e validação de conexões no banco, até o tempo de timeout ao esperar uma conexão, eu havia configurar antes para esperar apesar 3 segundos e com isso comecei a tomar toco, percebi que se aumentar isso ele consegue fazer a gestão do pool com mais eficiencia. 
-4. Faça configuração de Xmx e Xms no Java, ele não é tão inteligente para saber que só tem ele no container funcionando. Antes de não tem feito essa configuração, ele alcançava no máximo metade do utilizado com maior utilização de CPU. 
+3. Uma coisa que alguns devs não fazem, configurar o pool de conexões com teste e validação de conexões no banco, até o tempo de timeout ao esperar uma conexão, eu havia configurado antes para esperar apesar 3 segundos e com isso comecei a tomar toco, percebi que se aumentar isso ele consegue fazer a gestão do pool com mais eficiencia. 
+4. Faça configuração de `Xmx` e `Xms` no Java, ele não é tão inteligente para saber que só tem ele no container funcionando. Antes de não tem feito essa configuração, ele alcançava no máximo metade do utilizado com maior utilização de CPU. 
 
-Os cenários que cheguei mais próximo foram:
+### Os cenários que cheguei mais próximo foram:
 
-Cenário 1: 45.926 cadastros.
+#### Cenário 1: 45.926 cadastros.
 
 ![Cenário 1 Img](imgs/cenario1.png)
 
@@ -93,7 +99,7 @@ Cenário 1: 45.926 cadastros.
   * 700MB
 
 
-Cenário 2: 46.046 cadastros.
+#### Cenário 2: 46.046 cadastros.
 
 ![Cenário 2 Img](imgs/cenario2.png)
 
@@ -113,6 +119,7 @@ Cenário 2: 46.046 cadastros.
     * 700MB
 
 > Relatórios: os relatórios do Gatling estão na pasta reports
+> 
 > Docker-Compose Modo Host: No Docker eu executei com a network no modo host, isso para evitar aquele Problema de PrematureClose, a rede interna do docker não aguenta a porrada.
 
 ## Como executar local
